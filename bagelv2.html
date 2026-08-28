@@ -2189,216 +2189,80 @@ function renderStats(){
 
 function toggleCurrentOrders(){
 
-  const box =
-    document.getElementById(
-      "currentOrders"
-    );
+  const currentBox =
+    document.getElementById("currentOrders");
 
+  const lookupBox =
+    document.getElementById("lookupBox");
 
-  if(
-    box.style.display ===
-    "block"
-  ){
+  /* 如果查詢訂單有開著，先關掉 */
+  lookupBox.style.display = "none";
 
-    box.style.display =
-      "none";
+  if(currentBox.style.display === "block"){
+
+    currentBox.style.display = "none";
 
   }else{
 
     renderCurrentOrders();
 
-    box.style.display =
-      "block";
+    currentBox.style.display = "block";
 
   }
 
 }
+function toggleCurrentOrders(){
 
+  const currentBox =
+    document.getElementById("currentOrders");
 
+  const lookupBox =
+    document.getElementById("lookupBox");
 
-function renderCurrentOrders(){
+  /* 如果查詢訂單有開著，先關掉 */
+  lookupBox.style.display = "none";
 
-  const box =
-    document.getElementById(
-      "currentOrders"
-    );
+  if(currentBox.style.display === "block"){
 
+    currentBox.style.display = "none";
 
-  if(
-    orders.length === 0
-  ){
+  }else{
 
-    box.innerHTML = `
+    renderCurrentOrders();
 
-      <div
-        style="
-          color:#8d827b;
-          margin-top:12px;
-        ">
-
-        目前還沒有人下單
-
-      </div>
-
-    `;
-
-    return;
+    currentBox.style.display = "block";
 
   }
 
-
-  const sorted =
-    [...orders]
-    .sort(
-
-      (a,b)=>
-
-        new Date(
-          b.updatedAt
-          ||
-          b.createdAt
-        )
-
-        -
-
-        new Date(
-          a.updatedAt
-          ||
-          a.createdAt
-        )
-
-    );
-
-
-  box.innerHTML =
-    sorted.map(order=>{
-
-
-      const details =
-        order.items.map(i=>{
-
-          const p =
-            products.find(
-              x=>
-                x.id ===
-                i.productId
-            );
-
-
-          return p
-
-            ? `
-              ${escapeHTML(p.name)}
-              ×
-              ${i.qty}
-            `
-
-            : "";
-
-        })
-
-        .filter(Boolean)
-
-        .join("<br>");
-
-
-      return `
-
-        <div class="order-card">
-
-          <div
-            class="order-head"
-            onclick="
-              toggleOrderDetail(
-                '${order.id}'
-              )
-            ">
-
-
-            <span
-              class="order-head-name">
-
-              ${escapeHTML(order.name)}
-
-            </span>
-
-
-            <strong>
-
-              ${money(
-                orderTotal(order)
-              )}
-
-            </strong>
-
-          </div>
-
-
-          <div
-            class="order-detail"
-            id="
-              detail-${order.id}
-            ">
-
-            ${details}
-
-          </div>
-
-        </div>
-
-      `;
-
-    })
-    .join("");
-
 }
-
-
-
-function toggleOrderDetail(id){
-
-  const el =
-    document.getElementById(
-      "detail-" + id
-    );
-
-
-  el.style.display =
-
-    el.style.display ===
-    "block"
-
-    ? "none"
-
-    : "block";
-
-}
-
-
-
 /* ======================================================
    LOOKUP BY NAME
 ====================================================== */
 
 function toggleLookup(){
 
-  const box =
-    document.getElementById(
-      "lookupBox"
-    );
+  const lookupBox =
+    document.getElementById("lookupBox");
 
+  const currentBox =
+    document.getElementById("currentOrders");
 
-  box.style.display =
+  /* 如果目前訂單有開著，先關掉 */
+  currentBox.style.display = "none";
 
-    box.style.display ===
-    "none"
+  if(lookupBox.style.display === "block"){
 
-    ? "block"
+    lookupBox.style.display = "none";
 
-    : "none";
+  }else{
+
+    lookupBox.style.display = "block";
+
+    document.getElementById("lookupName").focus();
+
+  }
 
 }
-
 
 
 function lookupOrderByName(){
