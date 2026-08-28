@@ -594,7 +594,33 @@ th{
       1fr 90px auto;
   }
 }
+.order-head-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 
+.order-arrow{
+  color:#9d694f;
+  font-size:13px;
+  width:16px;
+  text-align:center;
+}
+
+.public-order-item{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:7px 0;
+  border-bottom:1px dashed #eee4dc;
+}
+
+.public-order-total{
+  margin-top:10px;
+  text-align:right;
+  font-weight:700;
+  color:#5d4037;
+}
 </style>
 </head>
 
@@ -2187,6 +2213,10 @@ function renderStats(){
    PUBLIC CURRENT ORDERS
 ====================================================== */
 
+/* ======================================================
+   PUBLIC CURRENT ORDERS
+====================================================== */
+
 function toggleCurrentOrders(){
 
   const currentBox =
@@ -2195,45 +2225,134 @@ function toggleCurrentOrders(){
   const lookupBox =
     document.getElementById("lookupBox");
 
-  /* 如果查詢訂單有開著，先關掉 */
+  // 開啟目前訂單時，關閉查詢區
   lookupBox.style.display = "none";
 
   if(currentBox.style.display === "block"){
-
     currentBox.style.display = "none";
-
   }else{
-
     renderCurrentOrders();
-
     currentBox.style.display = "block";
-
   }
-
 }
-function toggleCurrentOrders(){
 
-  const currentBox =
+
+function renderCurrentOrders(){
+
+  const box =
     document.getElementById("currentOrders");
 
-  const lookupBox =
-    document.getElementById("lookupBox");
+  if(orders.length === 0){
 
-  /* 如果查詢訂單有開著，先關掉 */
-  lookupBox.style.display = "none";
+    box.innerHTML = `
+      <div style="color:#8d827b;margin-top:12px">
+        目前還沒有人下單
+      </div>
+    `;
 
-  if(currentBox.style.display === "block"){
-
-    currentBox.style.display = "none";
-
-  }else{
-
-    renderCurrentOrders();
-
-    currentBox.style.display = "block";
-
+    return;
   }
 
+  const sorted = [...orders].sort((a,b)=>
+    new Date(b.updatedAt || b.createdAt)
+    -
+    new Date(a.updatedAt || a.createdAt)
+  );
+
+  box.innerHTML = sorted.map(order=>{
+
+    const details = order.items.map(i=>{
+
+      const p =
+        products.find(x=>x.id === i.productId);
+
+      if(!p) return "";
+
+      return `
+        <div class="public-order-item">
+
+          <span>
+            ${escapeHTML(p.name)} × ${i.qty}
+          </span>
+
+          <strong>
+            ${money(p.price * i.qty)}
+          </strong>
+
+        </div>
+      `;
+
+    }).filter(Boolean).join("");
+
+    return `
+      <div class="order-card">
+
+        <div
+          class="order-head"
+          onclick="toggleOrderDetail('${order.id}')"
+        >
+
+          <span class="order-head-name">
+            ${escapeHTML(order.name)}
+          </span>
+
+          <div class="order-head-right">
+
+            <strong>
+              ${money(orderTotal(order))}
+            </strong>
+
+            <span
+              class="order-arrow"
+              id="arrow-${order.id}"
+            >
+              ▶
+            </span>
+
+          </div>
+
+        </div>
+
+        <div
+          class="order-detail"
+          id="detail-${order.id}"
+        >
+
+          ${details}
+
+          <div class="public-order-total">
+            共 ${orderCount(order)} 個 ・ ${money(orderTotal(order))}
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+function toggleOrderDetail(id){
+
+  const detail =
+    document.getElementById("detail-" + id);
+
+  const arrow =
+    document.getElementById("arrow-" + id);
+
+  if(!detail || !arrow){
+    return;
+  }
+
+  const isOpen =
+    detail.style.display === "block";
+
+  detail.style.display =
+    isOpen ? "none" : "block";
+
+  arrow.textContent =
+    isOpen ? "▶" : "▼";
 }
 /* ======================================================
    LOOKUP BY NAME
