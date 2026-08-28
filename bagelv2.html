@@ -5,7 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>辦公室貝果團購</title>
+/* =========================
+   Summary detail
+========================= */
+.summary-product-row{
+  cursor:pointer;
+}
 
+.summary-product-row:hover{
+  background:#fffaf5;
+}
+
+.summary-product-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:650;
+}
+
+.summary-arrow{
+  display:inline-block;
+  width:16px;
+  color:#9d694f;
+  font-size:12px;
+}
+
+.summary-detail-row{
+  display:none;
+}
+
+.summary-detail-row td{
+  background:#fffdf9;
+  padding:0;
+}
+
+.summary-detail-box{
+  padding:10px 18px 14px 42px;
+}
+
+.summary-person{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:7px 0;
+  border-bottom:1px dashed #eee4dc;
+}
+
+.summary-person:last-child{
+  border-bottom:0;
+}
+
+.summary-person-name{
+  color:#5d4037;
+  font-weight:600;
+}
+
+.summary-person-qty{
+  font-weight:700;
+  color:#9d694f;
+}
+
+.summary-empty{
+  color:#8d827b;
+  padding:4px 0;
+}
 <style>
 :root{
   --bg:#fffaf4;
@@ -2837,7 +2900,43 @@ function showTab(
 function refreshAdmin(){
 
   renderSummary();
+function toggleSummaryDetail(
+  productId
+){
 
+  const detail =
+    document.getElementById(
+      "summary-detail-" +
+      productId
+    );
+
+  const arrow =
+    document.getElementById(
+      "summary-arrow-" +
+      productId
+    );
+
+  if(
+    !detail ||
+    !arrow
+  ){
+    return;
+  }
+
+  const isOpen =
+    detail.style.display ===
+    "table-row";
+
+  detail.style.display =
+    isOpen
+    ? "none"
+    : "table-row";
+
+  arrow.textContent =
+    isOpen
+    ? "▶"
+    : "▼";
+}
   renderOrders();
 
   renderProductEditor();
@@ -2853,63 +2952,148 @@ function refreshAdmin(){
 ====================================================== */
 
 function renderSummary(){
-
   const qty =
     getProductQty();
 
-
   let total = 0;
-
 
   document.getElementById(
     "summaryBody"
   ).innerHTML =
-
     products.map(p=>{
 
       const count =
-        qty[p.id]
-        || 0;
-
+        qty[p.id] || 0;
 
       const subtotal =
-        count
-        *
-        p.price;
+        count * p.price;
 
+      total += subtotal;
 
-      total +=
-        subtotal;
+      /* ======================
+         統計這個品項是誰訂的
+      ====================== */
 
+      const peopleMap = {};
+
+      orders.forEach(order=>{
+
+        order.items.forEach(item=>{
+
+          if(
+            item.productId === p.id
+            &&
+            item.qty > 0
+          ){
+
+            const name =
+              order.name.trim()
+              || "未命名";
+
+            if(
+              !peopleMap[name]
+            ){
+              peopleMap[name] = 0;
+            }
+
+            peopleMap[name] +=
+              item.qty;
+          }
+
+        });
+
+      });
+
+      const people =
+        Object.entries(
+          peopleMap
+        );
+
+      let detailHTML = "";
+
+      if(
+        people.length === 0
+      ){
+
+        detailHTML = `
+          <div class="summary-empty">
+            目前沒有人訂這個品項
+          </div>
+        `;
+
+      }else{
+
+        detailHTML =
+          people.map(
+            ([name,personQty])=>`
+              <div class="summary-person">
+
+                <span class="summary-person-name">
+                  ${escapeHTML(name)}
+                </span>
+
+                <span class="summary-person-qty">
+                  × ${personQty}
+                </span>
+
+              </div>
+            `
+          ).join("");
+
+      }
 
       return `
 
-        <tr>
+        <tr
+          class="summary-product-row"
+          onclick="
+            toggleSummaryDetail(
+              '${p.id}'
+            )
+          "
+        >
 
           <td>
+            <div class="summary-product-name">
 
-            ${escapeHTML(p.name)}
+              <span
+                class="summary-arrow"
+                id="summary-arrow-${p.id}"
+              >
+                ▶
+              </span>
 
+              <span>
+                ${escapeHTML(p.name)}
+              </span>
+
+            </div>
           </td>
 
-
           <td>
-
             ${count}
-
           </td>
 
-
           <td>
-
             ${money(p.price)}
-
           </td>
 
-
           <td>
-
             ${money(subtotal)}
+          </td>
+
+        </tr>
+
+        <tr
+          class="summary-detail-row"
+          id="summary-detail-${p.id}"
+        >
+
+          <td colspan="4">
+
+            <div class="summary-detail-box">
+              ${detailHTML}
+            </div>
 
           </td>
 
@@ -2917,18 +3101,13 @@ function renderSummary(){
 
       `;
 
-    })
-    .join("");
-
+    }).join("");
 
   document.getElementById(
     "adminTotal"
   ).textContent =
     money(total);
-
 }
-
-
 
 /* ======================================================
    ADMIN ORDERS
