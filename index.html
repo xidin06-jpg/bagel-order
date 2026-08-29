@@ -681,6 +681,7 @@ th{
 .summary-empty{
   color:#8d827b;
   padding:4px 0;
+}
 </style>
 </head>
 
@@ -1442,13 +1443,10 @@ th{
 
 
 <script>
-
 /* ======================================================
    DEFAULT PRODUCTS
 ====================================================== */
-
 const defaultProducts = [
-
   ["原味貝果",40],
   ["蜂蜜貝果",40],
   ["芝麻核桃乳酪",50],
@@ -1471,242 +1469,137 @@ const defaultProducts = [
   ["松露牛肝菌野菇起司貝果",75],
   ["冰心覆盆子可可貝果",60],
   ["冰心藍莓優格",60]
-
 ].map(
   (x,i)=>({
-
     id:"p"+i,
-
     name:x[0],
-
     price:x[1]
-
   })
 );
-
-
 
 /* ======================================================
    DATA
 ====================================================== */
-
 let products =
+  structuredClone(
+    defaultProducts
+  );
 
-  JSON.parse(
-    localStorage.getItem(
-      "bagelProducts"
-    )
-  )
+let orders = [];
 
-  || defaultProducts;
+let settings = {
+  title:
+    "辦公室貝果團購",
+  subtitle:
+    "大家自己點，系統幫忙統計 ✨",
+  namePlaceholder:
+    "請輸入你的姓名"
+};
 
-
-
-let orders =
-
-  JSON.parse(
-    localStorage.getItem(
-      "bagelOrders"
-    )
-  )
-
-  || [];
-
-
-
-let settings =
-
-  JSON.parse(
-    localStorage.getItem(
-      "bagelSettings"
-    )
-  )
-
-  || {
-
-    title:
-      "辦公室貝果團購",
-
-    subtitle:
-      "大家自己點，系統幫忙統計 ✨",
-
-    namePlaceholder:
-      "請輸入你的姓名"
-
-  };
-
-
+Object.defineProperties(
+  window,
+  {
+    products:{
+      get:()=>products,
+      set:v=>products=v
+    },
+    orders:{
+      get:()=>orders,
+      set:v=>orders=v
+    },
+    settings:{
+      get:()=>settings,
+      set:v=>settings=v
+    }
+  }
+);
 
 let cart = {};
-
 let editingOrderId = null;
-
-
 
 /* ======================================================
    HELPERS
 ====================================================== */
-
 function money(n){
-
   return "$" +
     Number(n)
-    .toLocaleString(
-      "zh-TW"
-    );
-
+    .toLocaleString("zh-TW");
 }
-
-
 
 function escapeHTML(str){
-
   return String(str)
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
-
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
-
-
 
 function escapeAttr(str){
-
   return escapeHTML(str);
-
 }
 
-
-
-/* ======================================================
-   SAVE
-====================================================== */
-
-function save(){
-
-  localStorage.setItem(
-    "bagelProducts",
-    JSON.stringify(products)
+function firebaseNotReady(){
+  alert(
+    "資料庫正在連線，請稍等一下再試。"
   );
-
-
-  localStorage.setItem(
-    "bagelOrders",
-    JSON.stringify(orders)
-  );
-
-
-  localStorage.setItem(
-    "bagelSettings",
-    JSON.stringify(settings)
-  );
-
 }
-
-
 
 /* ======================================================
    SETTINGS
 ====================================================== */
-
 function applySettings(){
-
   document.getElementById(
     "siteTitle"
   ).textContent =
     settings.title;
-
 
   document.getElementById(
     "siteSubtitle"
   ).textContent =
     settings.subtitle;
 
-
   const placeholder =
     settings.namePlaceholder
     || "請輸入你的姓名";
-
 
   document.getElementById(
     "customerName"
   ).placeholder =
     placeholder;
 
-
   document.getElementById(
     "lookupName"
   ).placeholder =
     placeholder;
 
-
   document.title =
     settings.title;
-
 }
-
-
 
 /* ======================================================
    PRODUCTS
 ====================================================== */
-
 function renderProducts(){
-
   const el =
     document.getElementById(
       "items"
     );
 
-
   el.innerHTML =
     products.map(p=>`
-
       <div class="item">
-
         <div>
-
           <div class="item-name">
-
             ${escapeHTML(p.name)}
-
           </div>
-
 
           <div class="price">
-
             ${money(p.price)}
-
           </div>
-
         </div>
 
-
         <div class="stepper">
-
-
           <button
             onclick="
               changeQty(
@@ -1714,18 +1607,12 @@ function renderProducts(){
                 -1
               )
             ">
-
             −
-
           </button>
 
-
           <span class="qty">
-
             ${cart[p.id] || 0}
-
           </span>
-
 
           <button
             onclick="
@@ -1734,28 +1621,18 @@ function renderProducts(){
                 1
               )
             ">
-
             ＋
-
           </button>
-
-
         </div>
-
       </div>
-
     `)
     .join("");
-
 }
-
-
 
 function changeQty(
   id,
   delta
 ){
-
   cart[id] =
     Math.max(
       0,
@@ -1763,54 +1640,32 @@ function changeQty(
       + delta
     );
 
-
-  if(
-    cart[id] === 0
-  ){
-
+  if(cart[id] === 0){
     delete cart[id];
-
   }
 
-
   renderProducts();
-
   renderCart();
-
 }
-
-
 
 /* ======================================================
    CART
 ====================================================== */
-
 function renderCart(){
-
   const rows =
     products
-
     .filter(
       p=>cart[p.id]
     )
-
     .map(p=>`
-
       <div class="summary-row">
-
         <span>
-
           ${escapeHTML(p.name)}
-
           ×
-
           ${cart[p.id]}
-
         </span>
 
-
         <strong>
-
           ${
             money(
               p.price
@@ -1818,135 +1673,59 @@ function renderCart(){
               cart[p.id]
             )
           }
-
         </strong>
-
       </div>
-
     `);
-
 
   document.getElementById(
     "cart"
   ).innerHTML =
-
     rows.length
-
     ? rows.join("")
-
     : `
-
-      <div
-        style="color:#8d827b">
-
+      <div style="color:#8d827b">
         還沒有選擇品項
-
       </div>
-
     `;
-
 
   const total =
     products.reduce(
-
       (sum,p)=>
-
         sum
-
         +
-
         (cart[p.id] || 0)
-
         *
-
         p.price,
-
       0
-
     );
-
 
   document.getElementById(
     "total"
   ).textContent =
     money(total);
-
 }
 
-
-
 function clearCart(){
-
   cart = {};
-
   editingOrderId = null;
-
 
   document.getElementById(
     "customerName"
   ).value = "";
-
 
   document.getElementById(
     "submitBtn"
   ).textContent =
     "送出訂單";
 
-
   renderProducts();
-
   renderCart();
-
 }
-
-
-
-/* ======================================================
-   ORDER NUMBER - INTERNAL ONLY
-====================================================== */
-
-function nextOrderNumber(){
-
-  const numbers =
-    orders
-
-    .map(
-      o=>
-        parseInt(
-          o.orderNumber
-        )
-    )
-
-    .filter(
-      n=>!isNaN(n)
-    );
-
-
-  const next =
-    numbers.length
-
-    ? Math.max(
-        ...numbers
-      ) + 1
-
-    : 1;
-
-
-  return String(next)
-    .padStart(
-      2,
-      "0"
-    );
-
-}
-
-
 
 /* ======================================================
    SUBMIT ORDER
 ====================================================== */
-
-function submitOrder(){
+async function submitOrder(){
 
   const name =
     document.getElementById(
@@ -1955,218 +1734,199 @@ function submitOrder(){
     .value
     .trim();
 
-
   if(!name){
-
-    alert(
-      "請先輸入姓名"
-    );
-
+    alert("請先輸入姓名");
     return;
-
   }
-
 
   if(
     Object.keys(cart)
     .length === 0
   ){
-
     alert(
       "請至少選擇一個品項"
     );
-
     return;
-
   }
-
 
   const items =
     Object.entries(cart)
-
     .map(
       ([productId,qty])=>({
-
         productId,
-
         qty
-
       })
     );
 
+  const submitBtn =
+    document.getElementById(
+      "submitBtn"
+    );
 
-  /* ======================
-     UPDATE
-  ====================== */
+  submitBtn.disabled = true;
 
-  if(editingOrderId){
+  try{
 
-    const order =
-      orders.find(
-        o=>
-          o.id ===
-          editingOrderId
+    /* ======================
+       UPDATE
+    ====================== */
+    if(editingOrderId){
+
+      if(
+        !window.firebaseUpdateOrder
+      ){
+        firebaseNotReady();
+        return;
+      }
+
+      const oldOrder =
+        orders.find(
+          o=>
+            o.id ===
+            editingOrderId
+        );
+
+      if(!oldOrder){
+        alert(
+          "找不到原本訂單"
+        );
+        return;
+      }
+
+      const updatedOrder = {
+        ...oldOrder,
+        name,
+        items,
+        updatedAt:
+          new Date()
+          .toISOString()
+      };
+
+      await window
+        .firebaseUpdateOrder(
+          updatedOrder
+        );
+
+      document.getElementById(
+        "success"
+      ).innerHTML =
+        "訂單已更新 ✅";
+
+      document.getElementById(
+        "success"
+      ).style.display =
+        "block";
+
+      setTimeout(
+        ()=>{
+          document.getElementById(
+            "success"
+          ).style.display =
+            "none";
+        },
+        2500
       );
 
+      editingOrderId = null;
+      cart = {};
 
-    if(!order){
+      document.getElementById(
+        "customerName"
+      ).value = "";
 
-      alert(
-        "找不到原本訂單"
-      );
+      submitBtn.textContent =
+        "送出訂單";
+
+      renderProducts();
+      renderCart();
 
       return;
-
     }
 
+    /* ======================
+       NEW ORDER
+    ====================== */
 
-    order.name =
-      name;
+    if(
+      !window.firebaseCreateOrder
+    ){
+      firebaseNotReady();
+      return;
+    }
 
+    const order = {
+      id:
+        "o-" +
+        crypto.randomUUID(),
+      name,
+      items,
+      createdAt:
+        new Date()
+        .toISOString()
+    };
 
-    order.items =
-      items;
-
-
-    order.updatedAt =
-      new Date()
-      .toISOString();
-
-
-    save();
-
+    await window
+      .firebaseCreateOrder(
+        order
+      );
 
     document.getElementById(
       "success"
     ).innerHTML =
-      "訂單已更新 ✅";
-
+      `訂單已成功送出 ✅<br>
+       之後可直接使用姓名查詢或修改。`;
 
     document.getElementById(
       "success"
     ).style.display =
       "block";
 
-
     setTimeout(
       ()=>{
-
         document.getElementById(
           "success"
         ).style.display =
           "none";
-
       },
-      2500
+      4000
     );
-
-
-    editingOrderId =
-      null;
-
 
     cart = {};
 
-
     document.getElementById(
       "customerName"
-    ).value =
-      "";
+    ).value = "";
 
+    renderProducts();
+    renderCart();
 
-    document.getElementById(
-      "submitBtn"
-    ).textContent =
-      "送出訂單";
+  }catch(error){
 
+    console.error(
+      "訂單寫入失敗：",
+      error
+    );
 
-    refreshEverything();
+    alert(
+      "訂單送出失敗，請檢查網路後再試一次。"
+    );
 
-    return;
+  }finally{
 
+    submitBtn.disabled = false;
+
+    submitBtn.textContent =
+      editingOrderId
+      ? "儲存修改"
+      : "送出訂單";
   }
-
-
-
-  /* ======================
-     NEW ORDER
-  ====================== */
-
-  const orderNumber =
-    nextOrderNumber();
-
-
-  orders.push({
-
-    id:
-      "o" + Date.now(),
-
-    orderNumber,
-
-    name,
-
-    items,
-
-    createdAt:
-      new Date()
-      .toISOString()
-
-  });
-
-
-  save();
-
-
-  document.getElementById(
-    "success"
-  ).innerHTML =
-
-    `訂單已成功送出 ✅<br>
-     之後可直接使用姓名查詢或修改。`;
-
-
-  document.getElementById(
-    "success"
-  ).style.display =
-    "block";
-
-
-  setTimeout(
-    ()=>{
-
-      document.getElementById(
-        "success"
-      ).style.display =
-        "none";
-
-    },
-    4000
-  );
-
-
-  cart = {};
-
-
-  document.getElementById(
-    "customerName"
-  ).value =
-    "";
-
-
-  refreshEverything();
-
 }
-
-
 
 /* ======================================================
    ORDER TOTAL / COUNT
 ====================================================== */
-
 function orderTotal(order){
-
   return order.items.reduce(
-
     (sum,i)=>{
 
       const p =
@@ -2176,136 +1936,113 @@ function orderTotal(order){
             i.productId
         );
 
-
       return sum +
-
         (
           p
-
-          ? p.price
-            *
-            i.qty
-
+          ? p.price * i.qty
           : 0
         );
 
     },
-
     0
-
   );
-
 }
-
-
 
 function orderCount(order){
-
   return order.items.reduce(
-
     (sum,i)=>
       sum + i.qty,
-
     0
-
   );
-
 }
-
-
 
 /* ======================================================
    HOME STATS
 ====================================================== */
-
 function renderStats(){
 
   const people =
     orders.length;
 
-
   const bagels =
     orders.reduce(
-
       (sum,o)=>
         sum +
         orderCount(o),
-
       0
-
     );
-
 
   const total =
     orders.reduce(
-
       (sum,o)=>
         sum +
         orderTotal(o),
-
       0
-
     );
-
 
   document.getElementById(
     "peopleCount"
   ).textContent =
     people;
 
-
   document.getElementById(
     "bagelCount"
   ).textContent =
     bagels;
 
-
   document.getElementById(
     "amountCount"
   ).textContent =
     money(total);
-
 }
 
-
-
 /* ======================================================
    PUBLIC CURRENT ORDERS
 ====================================================== */
-
-/* ======================================================
-   PUBLIC CURRENT ORDERS
-====================================================== */
-
 function toggleCurrentOrders(){
 
   const currentBox =
-    document.getElementById("currentOrders");
+    document.getElementById(
+      "currentOrders"
+    );
 
   const lookupBox =
-    document.getElementById("lookupBox");
+    document.getElementById(
+      "lookupBox"
+    );
 
-  // 開啟目前訂單時，關閉查詢區
-  lookupBox.style.display = "none";
+  lookupBox.style.display =
+    "none";
 
-  if(currentBox.style.display === "block"){
-    currentBox.style.display = "none";
+  if(
+    currentBox.style.display
+    === "block"
+  ){
+    currentBox.style.display =
+      "none";
   }else{
     renderCurrentOrders();
-    currentBox.style.display = "block";
+
+    currentBox.style.display =
+      "block";
   }
 }
-
 
 function renderCurrentOrders(){
 
   const box =
-    document.getElementById("currentOrders");
+    document.getElementById(
+      "currentOrders"
+    );
 
   if(orders.length === 0){
 
     box.innerHTML = `
-      <div style="color:#8d827b;margin-top:12px">
+      <div
+        style="
+          color:#8d827b;
+          margin-top:12px
+        ">
         目前還沒有人下單
       </div>
     `;
@@ -2313,207 +2050,25 @@ function renderCurrentOrders(){
     return;
   }
 
-  const sorted = [...orders].sort((a,b)=>
-    new Date(b.updatedAt || b.createdAt)
-    -
-    new Date(a.updatedAt || a.createdAt)
-  );
-
-  box.innerHTML = sorted.map(order=>{
-
-    const details = order.items.map(i=>{
-
-      const p =
-        products.find(x=>x.id === i.productId);
-
-      if(!p) return "";
-
-      return `
-        <div class="public-order-item">
-
-          <span>
-            ${escapeHTML(p.name)} × ${i.qty}
-          </span>
-
-          <strong>
-            ${money(p.price * i.qty)}
-          </strong>
-
-        </div>
-      `;
-
-    }).filter(Boolean).join("");
-
-    return `
-      <div class="order-card">
-
-        <div
-          class="order-head"
-          onclick="toggleOrderDetail('${order.id}')"
-        >
-
-          <span class="order-head-name">
-            ${escapeHTML(order.name)}
-          </span>
-
-          <div class="order-head-right">
-
-            <strong>
-              ${money(orderTotal(order))}
-            </strong>
-
-            <span
-              class="order-arrow"
-              id="arrow-${order.id}"
-            >
-              ▶
-            </span>
-
-          </div>
-
-        </div>
-
-        <div
-          class="order-detail"
-          id="detail-${order.id}"
-        >
-
-          ${details}
-
-          <div class="public-order-total">
-            共 ${orderCount(order)} 個 ・ ${money(orderTotal(order))}
-          </div>
-
-        </div>
-
-      </div>
-    `;
-
-  }).join("");
-}
-
-
-function toggleOrderDetail(id){
-
-  const detail =
-    document.getElementById("detail-" + id);
-
-  const arrow =
-    document.getElementById("arrow-" + id);
-
-  if(!detail || !arrow){
-    return;
-  }
-
-  const isOpen =
-    detail.style.display === "block";
-
-  detail.style.display =
-    isOpen ? "none" : "block";
-
-  arrow.textContent =
-    isOpen ? "▶" : "▼";
-}
-/* ======================================================
-   LOOKUP BY NAME
-====================================================== */
-
-function toggleLookup(){
-
-  const lookupBox =
-    document.getElementById("lookupBox");
-
-  const currentBox =
-    document.getElementById("currentOrders");
-
-  /* 如果目前訂單有開著，先關掉 */
-  currentBox.style.display = "none";
-
-  if(lookupBox.style.display === "block"){
-
-    lookupBox.style.display = "none";
-
-  }else{
-
-    lookupBox.style.display = "block";
-
-    document.getElementById("lookupName").focus();
-
-  }
-
-}
-
-
-function lookupOrderByName(){
-
-  const name =
-    document.getElementById(
-      "lookupName"
-    )
-    .value
-    .trim();
-
-
-  const result =
-    document.getElementById(
-      "lookupResult"
+  const sorted =
+    [...orders]
+    .sort(
+      (a,b)=>
+        new Date(
+          b.updatedAt
+          ||
+          b.createdAt
+        )
+        -
+        new Date(
+          a.updatedAt
+          ||
+          a.createdAt
+        )
     );
 
-
-  if(!name){
-
-    alert(
-      "請輸入姓名"
-    );
-
-    return;
-
-  }
-
-
-  const matches =
-    orders.filter(
-      o=>
-        o.name
-        .trim()
-        .toLowerCase()
-        ===
-        name
-        .toLowerCase()
-    );
-
-
-  if(
-    matches.length === 0
-  ){
-
-    result.style.display =
-      "block";
-
-
-    result.innerHTML = `
-
-      <div
-        style="color:#d75b5b">
-
-        找不到「${escapeHTML(name)}」的訂單。
-
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  result.style.display =
-    "block";
-
-
-  result.innerHTML =
-    matches.map(order=>{
-
+  box.innerHTML =
+    sorted.map(order=>{
 
       const details =
         order.items.map(i=>{
@@ -2525,231 +2080,368 @@ function lookupOrderByName(){
                 i.productId
             );
 
+          if(!p){
+            return "";
+          }
 
-          return p
+          return `
+            <div class="public-order-item">
+              <span>
+                ${escapeHTML(p.name)}
+                × ${i.qty}
+              </span>
 
-            ? `
-
-              <div
-                class="summary-row">
-
-                <span>
-
-                  ${escapeHTML(p.name)}
-                  ×
-                  ${i.qty}
-
-                </span>
-
-
-                <strong>
-
-                  ${
-                    money(
-                      p.price
-                      *
-                      i.qty
-                    )
-                  }
-
-                </strong>
-
-              </div>
-
-            `
-
-            : "";
+              <strong>
+                ${
+                  money(
+                    p.price * i.qty
+                  )
+                }
+              </strong>
+            </div>
+          `;
 
         })
+        .filter(Boolean)
         .join("");
 
-
       return `
-
-        <div class="lookup-choice">
-
-          <strong>
-
-            ${escapeHTML(order.name)}
-
-          </strong>
-
+        <div class="order-card">
 
           <div
-            style="
-              margin-top:8px;
-            ">
+            class="order-head"
+            onclick="
+              toggleOrderDetail(
+                '${order.id}'
+              )
+            "
+          >
+
+            <span class="order-head-name">
+              ${escapeHTML(order.name)}
+            </span>
+
+            <div class="order-head-right">
+
+              <strong>
+                ${
+                  money(
+                    orderTotal(order)
+                  )
+                }
+              </strong>
+
+              <span
+                class="order-arrow"
+                id="arrow-${order.id}"
+              >
+                ▶
+              </span>
+
+            </div>
+          </div>
+
+          <div
+            class="order-detail"
+            id="detail-${order.id}"
+          >
 
             ${details}
 
-          </div>
-
-
-          <div class="total">
-
-            <span>
-              總計
-            </span>
-
-            <span>
-
+            <div class="public-order-total">
+              共
+              ${orderCount(order)}
+              個 ・
               ${
                 money(
                   orderTotal(order)
                 )
               }
-
-            </span>
+            </div>
 
           </div>
+        </div>
+      `;
 
+    })
+    .join("");
+}
+
+function toggleOrderDetail(id){
+
+  const detail =
+    document.getElementById(
+      "detail-" + id
+    );
+
+  const arrow =
+    document.getElementById(
+      "arrow-" + id
+    );
+
+  if(!detail || !arrow){
+    return;
+  }
+
+  const isOpen =
+    detail.style.display ===
+    "block";
+
+  detail.style.display =
+    isOpen
+    ? "none"
+    : "block";
+
+  arrow.textContent =
+    isOpen
+    ? "▶"
+    : "▼";
+}
+
+/* ======================================================
+   LOOKUP
+====================================================== */
+function toggleLookup(){
+
+  const lookupBox =
+    document.getElementById(
+      "lookupBox"
+    );
+
+  const currentBox =
+    document.getElementById(
+      "currentOrders"
+    );
+
+  currentBox.style.display =
+    "none";
+
+  if(
+    lookupBox.style.display
+    === "block"
+  ){
+    lookupBox.style.display =
+      "none";
+  }else{
+    lookupBox.style.display =
+      "block";
+
+    document.getElementById(
+      "lookupName"
+    ).focus();
+  }
+}
+
+function lookupOrderByName(){
+
+  const name =
+    document.getElementById(
+      "lookupName"
+    )
+    .value
+    .trim();
+
+  const result =
+    document.getElementById(
+      "lookupResult"
+    );
+
+  if(!name){
+    alert("請輸入姓名");
+    return;
+  }
+
+  const matches =
+    orders.filter(
+      o=>
+        o.name
+        .trim()
+        .toLowerCase()
+        ===
+        name.toLowerCase()
+    );
+
+  if(matches.length === 0){
+
+    result.style.display =
+      "block";
+
+    result.innerHTML = `
+      <div style="color:#d75b5b">
+        找不到「${escapeHTML(name)}」的訂單。
+      </div>
+    `;
+
+    return;
+  }
+
+  result.style.display =
+    "block";
+
+  result.innerHTML =
+    matches.map(order=>{
+
+      const details =
+        order.items.map(i=>{
+
+          const p =
+            products.find(
+              x=>
+                x.id ===
+                i.productId
+            );
+
+          return p
+            ? `
+              <div class="summary-row">
+                <span>
+                  ${escapeHTML(p.name)}
+                  ×
+                  ${i.qty}
+                </span>
+
+                <strong>
+                  ${
+                    money(
+                      p.price * i.qty
+                    )
+                  }
+                </strong>
+              </div>
+            `
+            : "";
+
+        })
+        .join("");
+
+      return `
+        <div class="lookup-choice">
+
+          <strong>
+            ${escapeHTML(order.name)}
+          </strong>
+
+          <div style="margin-top:8px">
+            ${details}
+          </div>
+
+          <div class="total">
+            <span>總計</span>
+
+            <span>
+              ${
+                money(
+                  orderTotal(order)
+                )
+              }
+            </span>
+          </div>
 
           <div class="actions">
-
             <button
               class="primary"
               onclick="
                 editOrder(
                   '${order.id}'
                 )
-              ">
-
+              "
+            >
               修改這筆訂單
-
             </button>
-
           </div>
 
         </div>
-
       `;
 
     })
     .join("");
-
 }
-
-
 
 /* ======================================================
    EDIT ORDER
 ====================================================== */
-
 function editOrder(id){
 
   const order =
     orders.find(
-      o=>
-        o.id === id
+      o=>o.id === id
     );
 
-
   if(!order){
-
     return;
-
   }
 
-
-  editingOrderId =
-    id;
-
+  editingOrderId = id;
 
   document.getElementById(
     "customerName"
   ).value =
     order.name;
 
-
   cart = {};
-
 
   order.items.forEach(
     i=>{
-
       cart[i.productId] =
         i.qty;
-
     }
   );
-
 
   document.getElementById(
     "submitBtn"
   ).textContent =
     "儲存修改";
 
-
   document.getElementById(
     "lookupBox"
   ).style.display =
     "none";
 
-
   renderProducts();
-
   renderCart();
-
 
   document.getElementById(
     "customerName"
   ).scrollIntoView({
-
     behavior:"smooth",
-
     block:"center"
-
   });
-
 }
-
-
 
 /* ======================================================
    PRODUCT TOTALS
 ====================================================== */
-
 function getProductQty(){
 
   const result = {};
-
 
   products.forEach(
     p=>
       result[p.id] = 0
   );
 
-
   orders.forEach(order=>{
 
     order.items.forEach(i=>{
 
       result[i.productId] =
-
         (
           result[i.productId]
           || 0
         )
-
         +
-
         i.qty;
 
     });
 
   });
 
-
   return result;
-
 }
-
-
 
 /* ======================================================
    ADMIN OPEN / CLOSE
 ====================================================== */
-
 function openAdmin(){
 
   document.getElementById(
@@ -2757,15 +2449,11 @@ function openAdmin(){
   ).style.display =
     "none";
 
-
   document.getElementById(
     "adminPage"
   ).style.display =
     "block";
-
 }
-
-
 
 function closeAdmin(){
 
@@ -2774,23 +2462,17 @@ function closeAdmin(){
   ).style.display =
     "none";
 
-
   document.getElementById(
     "shopPage"
   ).style.display =
     "block";
 
-
   refreshEverything();
-
 }
-
-
 
 /* ======================================================
    ADMIN LOGIN
 ====================================================== */
-
 function loginAdmin(){
 
   const pw =
@@ -2798,47 +2480,27 @@ function loginAdmin(){
       "adminPassword"
     ).value;
 
-
-  /*
-    測試版密碼：
-    bagel
-  */
-
-  if(
-    pw !== "bagel"
-  ){
-
-    alert(
-      "密碼錯誤"
-    );
-
+  if(pw !== "bagel"){
+    alert("密碼錯誤");
     return;
-
   }
-
 
   document.getElementById(
     "loginBox"
   ).style.display =
     "none";
 
-
   document.getElementById(
     "adminContent"
   ).style.display =
     "block";
 
-
   refreshAdmin();
-
 }
-
-
 
 /* ======================================================
    ADMIN TABS
 ====================================================== */
-
 function showTab(
   id,
   btn
@@ -2850,12 +2512,10 @@ function showTab(
     )
     .forEach(
       x=>
-        x.classList
-        .remove(
+        x.classList.remove(
           "active"
         )
     );
-
 
   document
     .querySelectorAll(
@@ -2863,37 +2523,27 @@ function showTab(
     )
     .forEach(
       x=>
-        x.classList
-        .remove(
+        x.classList.remove(
           "active"
         )
     );
 
-
   document
     .getElementById(id)
-    .classList
-    .add(
+    .classList.add(
       "active"
     );
 
-
-  btn.classList
-    .add(
-      "active"
-    );
-
+  btn.classList.add(
+    "active"
+  );
 
   refreshAdmin();
-
 }
-
-
 
 /* ======================================================
    REFRESH ADMIN
 ====================================================== */
-
 function refreshAdmin(){
   renderSummary();
   renderOrders();
@@ -2901,16 +2551,20 @@ function refreshAdmin(){
   renderSettings();
 }
 
-function toggleSummaryDetail(productId){
+function toggleSummaryDetail(
+  productId
+){
 
   const detail =
     document.getElementById(
-      "summary-detail-" + productId
+      "summary-detail-" +
+      productId
     );
 
   const arrow =
     document.getElementById(
-      "summary-arrow-" + productId
+      "summary-arrow-" +
+      productId
     );
 
   if(!detail || !arrow){
@@ -2918,21 +2572,25 @@ function toggleSummaryDetail(productId){
   }
 
   const isOpen =
-    detail.style.display === "table-row";
+    detail.style.display ===
+    "table-row";
 
   detail.style.display =
-    isOpen ? "none" : "table-row";
+    isOpen
+    ? "none"
+    : "table-row";
 
   arrow.textContent =
-    isOpen ? "▶" : "▼";
+    isOpen
+    ? "▶"
+    : "▼";
 }
-
 
 /* ======================================================
    SUMMARY
 ====================================================== */
-
 function renderSummary(){
+
   const qty =
     getProductQty();
 
@@ -2951,10 +2609,6 @@ function renderSummary(){
 
       total += subtotal;
 
-      /* ======================
-         統計這個品項是誰訂的
-      ====================== */
-
       const peopleMap = {};
 
       orders.forEach(order=>{
@@ -2971,9 +2625,7 @@ function renderSummary(){
               order.name.trim()
               || "未命名";
 
-            if(
-              !peopleMap[name]
-            ){
+            if(!peopleMap[name]){
               peopleMap[name] = 0;
             }
 
@@ -2992,9 +2644,7 @@ function renderSummary(){
 
       let detailHTML = "";
 
-      if(
-        people.length === 0
-      ){
+      if(people.length === 0){
 
         detailHTML = `
           <div class="summary-empty">
@@ -3019,12 +2669,11 @@ function renderSummary(){
 
               </div>
             `
-          ).join("");
-
+          )
+          .join("");
       }
 
       return `
-
         <tr
           class="summary-product-row"
           onclick="
@@ -3071,18 +2720,16 @@ function renderSummary(){
         >
 
           <td colspan="4">
-
             <div class="summary-detail-box">
               ${detailHTML}
             </div>
-
           </td>
 
         </tr>
-
       `;
 
-    }).join("");
+    })
+    .join("");
 
   document.getElementById(
     "adminTotal"
@@ -3093,7 +2740,6 @@ function renderSummary(){
 /* ======================================================
    ADMIN ORDERS
 ====================================================== */
-
 function renderOrders(){
 
   const body =
@@ -3101,33 +2747,21 @@ function renderOrders(){
       "ordersBody"
     );
 
-
-  if(
-    orders.length === 0
-  ){
+  if(orders.length === 0){
 
     body.innerHTML = `
-
       <tr>
-
         <td colspan="6">
-
           目前還沒有訂單
-
         </td>
-
       </tr>
-
     `;
 
     return;
-
   }
-
 
   body.innerHTML =
     orders.map(order=>{
-
 
       const details =
         order.items.map(i=>{
@@ -3139,214 +2773,167 @@ function renderOrders(){
                 i.productId
             );
 
-
           return p
-
             ? `
               ${escapeHTML(p.name)}
               ×
               ${i.qty}
             `
-
             : "";
 
         })
-
         .filter(Boolean)
-
         .join("、");
 
-
       return `
-
         <tr>
 
           <td>
-
-            ${order.orderNumber}
-
+            ${order.orderNumber || "-"}
           </td>
 
-
           <td>
-
             <strong>
-
               ${escapeHTML(order.name)}
-
             </strong>
-
           </td>
 
-
           <td>
-
             ${details}
-
           </td>
 
-
           <td>
-
             ${orderCount(order)}
-
           </td>
 
-
           <td>
-
             ${
               money(
                 orderTotal(order)
               )
             }
-
           </td>
 
-
           <td>
-
             <button
               class="danger"
               onclick="
                 deleteOrder(
                   '${order.id}'
                 )
-              ">
-
+              "
+            >
               刪除
-
             </button>
-
           </td>
 
         </tr>
-
       `;
 
     })
     .join("");
-
 }
-
-
 
 /* ======================================================
    DELETE ORDER
 ====================================================== */
-
-function deleteOrder(id){
+async function deleteOrder(id){
 
   if(
     !confirm(
       "確定要刪除這筆訂單嗎？"
     )
   ){
-
     return;
-
   }
 
+  if(
+    !window.firebaseDeleteOrder
+  ){
+    firebaseNotReady();
+    return;
+  }
 
-  orders =
-    orders.filter(
-      o=>
-        o.id !== id
+  try{
+
+    await window
+      .firebaseDeleteOrder(id);
+
+  }catch(error){
+
+    console.error(
+      "刪除訂單失敗：",
+      error
     );
 
-
-  save();
-
-  refreshEverything();
-
-  refreshAdmin();
-
+    alert(
+      "刪除失敗，請檢查網路連線。"
+    );
+  }
 }
-
-
 
 /* ======================================================
    PRODUCT EDITOR
 ====================================================== */
-
 function renderProductEditor(){
 
   document.getElementById(
     "productEditor"
   ).innerHTML =
-
     products.map(
       (p,i)=>`
+        <div class="admin-item">
 
-      <div class="admin-item">
-
-        <input
-          value="${escapeAttr(p.name)}"
-
-          onchange="
-            products[${i}].name =
-              this.value
-          "
-
-          placeholder="品項名稱">
-
-
-        <input
-          type="number"
-
-          value="${p.price}"
-
-          onchange="
-            products[${i}].price =
-              Number(
+          <input
+            value="${escapeAttr(p.name)}"
+            onchange="
+              products[${i}].name =
                 this.value
+            "
+            placeholder="品項名稱"
+          >
+
+          <input
+            type="number"
+            value="${p.price}"
+            onchange="
+              products[${i}].price =
+                Number(
+                  this.value
+                )
+            "
+            placeholder="價格"
+          >
+
+          <button
+            class="danger"
+            onclick="
+              removeProduct(
+                ${i}
               )
-          "
+            "
+          >
+            刪除
+          </button>
 
-          placeholder="價格">
-
-
-        <button
-          class="danger"
-
-          onclick="
-            removeProduct(
-              ${i}
-            )
-          ">
-
-          刪除
-
-        </button>
-
-      </div>
-
-    `)
+        </div>
+      `
+    )
     .join("");
-
 }
-
-
 
 function addProduct(){
 
   products.push({
-
     id:
-      "p" + Date.now(),
-
+      "p-" +
+      crypto.randomUUID(),
     name:"",
-
     price:0
-
   });
 
-
   renderProductEditor();
-
 }
-
-
 
 function removeProduct(index){
 
@@ -3355,25 +2942,25 @@ function removeProduct(index){
       "確定要刪除這個品項嗎？"
     )
   ){
-
     return;
-
   }
-
 
   products.splice(
     index,
     1
   );
 
-
   renderProductEditor();
-
 }
 
+async function saveProducts(){
 
-
-function saveProducts(){
+  if(
+    !window.firebaseSaveConfig
+  ){
+    firebaseNotReady();
+    return;
+  }
 
   products =
     products.filter(
@@ -3381,26 +2968,37 @@ function saveProducts(){
         p.name.trim()
     );
 
+  try{
 
-  save();
+    await window
+      .firebaseSaveConfig({
+        products,
+        settings
+      });
 
-  refreshEverything();
+    refreshEverything();
+    refreshAdmin();
 
-  refreshAdmin();
+    alert(
+      "品項已儲存"
+    );
 
+  }catch(error){
 
-  alert(
-    "品項已儲存"
-  );
+    console.error(
+      "儲存品項失敗：",
+      error
+    );
 
+    alert(
+      "品項儲存失敗，請檢查網路連線。"
+    );
+  }
 }
 
-
-
 /* ======================================================
-   ADMIN SETTINGS
+   SETTINGS
 ====================================================== */
-
 function renderSettings(){
 
   document.getElementById(
@@ -3408,136 +3006,118 @@ function renderSettings(){
   ).value =
     settings.title;
 
-
   document.getElementById(
     "settingSubtitle"
   ).value =
     settings.subtitle;
-
 
   document.getElementById(
     "settingNamePlaceholder"
   ).value =
     settings.namePlaceholder
     || "請輸入你的姓名";
-
 }
 
+async function saveSettings(){
 
-
-function saveSettings(){
+  if(
+    !window.firebaseSaveConfig
+  ){
+    firebaseNotReady();
+    return;
+  }
 
   settings.title =
-
     document.getElementById(
       "settingTitle"
     )
     .value
     .trim()
-
     ||
-
     "辦公室團購";
 
-
   settings.subtitle =
-
     document.getElementById(
       "settingSubtitle"
     )
     .value
     .trim();
 
-
   settings.namePlaceholder =
-
     document.getElementById(
       "settingNamePlaceholder"
     )
     .value
     .trim()
-
     ||
-
     "請輸入你的姓名";
 
+  try{
 
-  save();
+    await window
+      .firebaseSaveConfig({
+        products,
+        settings
+      });
 
-  applySettings();
+    applySettings();
 
+    alert(
+      "網站設定已儲存"
+    );
 
-  alert(
-    "網站設定已儲存"
-  );
+  }catch(error){
 
+    console.error(
+      "網站設定儲存失敗：",
+      error
+    );
+
+    alert(
+      "網站設定儲存失敗，請檢查網路連線。"
+    );
+  }
 }
-
-
 
 /* ======================================================
    CSV
 ====================================================== */
-
 function downloadCSV(){
 
   const qty =
     getProductQty();
 
-
   const rows = [
-
     [
       "品項",
       "數量",
       "單價",
       "小計"
     ]
-
   ];
-
 
   products.forEach(p=>{
 
     const count =
-      qty[p.id]
-      || 0;
-
+      qty[p.id] || 0;
 
     rows.push([
-
       p.name,
-
       count,
-
       p.price,
-
-      count
-      *
-      p.price
-
+      count * p.price
     ]);
-
   });
-
 
   rows.push([]);
 
-
   rows.push([
-
     "內部訂單編號",
-
     "姓名",
-
     "訂購內容",
-
     "數量",
-
     "金額"
-
   ]);
-
 
   orders.forEach(order=>{
 
@@ -3551,42 +3131,26 @@ function downloadCSV(){
               i.productId
           );
 
-
         return p
-
           ? `${p.name} x${i.qty}`
-
           : "";
 
       })
       .join(" / ");
 
-
     rows.push([
-
-      order.orderNumber,
-
+      order.orderNumber || "",
       order.name,
-
       content,
-
       orderCount(order),
-
       orderTotal(order)
-
     ]);
-
   });
 
-
   const csv =
-
     "\uFEFF"
-
     +
-
     rows.map(row=>
-
       row.map(cell=>{
 
         const s =
@@ -3598,139 +3162,94 @@ function downloadCSV(){
             '""'
           );
 
-
         return `"${s}"`;
 
       })
       .join(",")
-
     )
     .join("\n");
 
-
   const blob =
     new Blob(
-
       [csv],
-
       {
-
         type:
           "text/csv;charset=utf-8;"
-
       }
-
     );
-
 
   const url =
     URL.createObjectURL(
       blob
     );
 
-
   const a =
     document.createElement(
       "a"
     );
 
-
-  a.href =
-    url;
-
+  a.href = url;
 
   a.download =
     "貝果團購統計.csv";
 
-
   a.click();
 
-
-  URL.revokeObjectURL(
-    url
-  );
-
+  URL.revokeObjectURL(url);
 }
-
-
 
 /* ======================================================
    COPY SUMMARY
 ====================================================== */
-
 async function copySummary(){
 
   const qty =
     getProductQty();
 
-
   let text =
     `【${settings.title}統計】\n\n`;
-
 
   products.forEach(p=>{
 
     const count =
-      qty[p.id]
-      || 0;
+      qty[p.id] || 0;
 
-
-    if(
-      count > 0
-    ){
-
+    if(count > 0){
       text +=
         `${p.name} × ${count}\n`;
-
     }
-
   });
-
 
   const total =
     orders.reduce(
-
       (sum,o)=>
-        sum
-        +
+        sum +
         orderTotal(o),
-
       0
-
     );
-
 
   const bagels =
     orders.reduce(
-
       (sum,o)=>
-        sum
-        +
+        sum +
         orderCount(o),
-
       0
-
     );
-
 
   text +=
     `\n共 ${orders.length} 人`;
 
-
   text +=
     `\n共 ${bagels} 個`;
 
-
   text +=
     `\n總金額 ${money(total)}`;
-
 
   try{
 
     await navigator
       .clipboard
       .writeText(text);
-
 
     alert(
       "統計內容已複製"
@@ -3742,126 +3261,616 @@ async function copySummary(){
       "請複製以下內容：",
       text
     );
-
   }
-
 }
 
-
-
 /* ======================================================
-   REFRESH ALL
+   REFRESH
 ====================================================== */
-
 function refreshEverything(){
 
   renderProducts();
-
   renderCart();
-
   renderStats();
-
 
   const currentOrders =
     document.getElementById(
       "currentOrders"
     );
 
-
   if(
-    currentOrders.style.display ===
-    "block"
+    currentOrders.style.display
+    === "block"
   ){
-
     renderCurrentOrders();
-
   }
-
 }
-
-
 
 /* ======================================================
-   OLD DATA MIGRATION
+   START
 ====================================================== */
-
-/*
-  如果之前測試版已有訂單，
-  但沒有 orderNumber，
-  這裡會自動補上。
-*/
-
-orders.forEach(
-  (order,index)=>{
-
-    if(
-      !order.orderNumber
-    ){
-
-      order.orderNumber =
-        String(
-          index + 1
-        )
-        .padStart(
-          2,
-          "0"
-        );
-
-    }
-
-  }
-);
-
-
-
-/*
-  舊版設定若沒有
-  namePlaceholder
-  自動補上。
-*/
-
-if(
-  !settings.namePlaceholder
-){
-
-  settings.namePlaceholder =
-    "請輸入你的姓名";
-
-}
-
-
-
-save();
-
 applySettings();
-
 refreshEverything();
 
+/* 給 Firebase module 使用 */
+window.applySettings =
+  applySettings;
+
+window.refreshEverything =
+  refreshEverything;
+
+window.refreshAdmin =
+  refreshAdmin;
+
 </script>
+
+
 <script type="module">
 
-import { initializeApp }
+import {
+  initializeApp
+}
 from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
-  getFirestore
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  runTransaction
 }
 from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDu9r1nAecVvfpK2EElHRR31vcifVawnUw",
-  authDomain: "bagel-order-ffae5.firebaseapp.com",
-  projectId: "bagel-order-ffae5",
-  storageBucket: "bagel-order-ffae5.firebasestorage.app",
-  messagingSenderId: "372719633498",
-  appId: "1:372719633498:web:46b268c66336e4173f4463"
+  apiKey:
+    "AIzaSyDu9r1nAecVvfpK2EElHRR31vcifVawnUw",
+  authDomain:
+    "bagel-order-ffae5.firebaseapp.com",
+  projectId:
+    "bagel-order-ffae5",
+  storageBucket:
+    "bagel-order-ffae5.firebasestorage.app",
+  messagingSenderId:
+    "372719633498",
+  appId:
+    "1:372719633498:web:46b268c66336e4173f4463"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
 
-console.log("Firebase / Firestore 已連線");
+const firebaseApp =
+  initializeApp(
+    firebaseConfig
+  );
 
-</script>
-</body>
+const db =
+  getFirestore(
+    firebaseApp
+  );
+
+
+/* ======================================================
+   FIRESTORE REFERENCES
+====================================================== */
+
+const ordersCollection =
+  collection(
+    db,
+    "orders"
+  );
+
+const configDoc =
+  doc(
+    db,
+    "config",
+    "shared"
+  );
+
+const counterDoc =
+  doc(
+    db,
+    "meta",
+    "orderCounter"
+  );
+
+/*
+  舊版本資料的位置。
+  用來自動搬移舊資料。
+*/
+const legacySharedDoc =
+  doc(
+    db,
+    "bagel",
+    "shared"
+  );
+
+
+/* ======================================================
+   CREATE ORDER
+====================================================== */
+
+window.firebaseCreateOrder =
+  async function(order){
+
+    let createdOrder = null;
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const counterSnapshot =
+          await transaction.get(
+            counterDoc
+          );
+
+        let next = 1;
+
+        if(
+          counterSnapshot.exists()
+        ){
+          next =
+            Number(
+              counterSnapshot
+                .data()
+                .value
+              || 0
+            )
+            + 1;
+        }
+
+        const orderNumber =
+          String(next)
+          .padStart(
+            2,
+            "0"
+          );
+
+        createdOrder = {
+          ...order,
+          orderNumber
+        };
+
+        transaction.set(
+          counterDoc,
+          {
+            value:next
+          },
+          {
+            merge:true
+          }
+        );
+
+        transaction.set(
+          doc(
+            db,
+            "orders",
+            order.id
+          ),
+          createdOrder
+        );
+      }
+    );
+
+    return createdOrder;
+  };
+
+
+/* ======================================================
+   UPDATE ORDER
+====================================================== */
+
+window.firebaseUpdateOrder =
+  async function(order){
+
+    await setDoc(
+      doc(
+        db,
+        "orders",
+        order.id
+      ),
+      order
+    );
+  };
+
+
+/* ======================================================
+   DELETE ORDER
+====================================================== */
+
+window.firebaseDeleteOrder =
+  async function(id){
+
+    await deleteDoc(
+      doc(
+        db,
+        "orders",
+        id
+      )
+    );
+  };
+
+
+/* ======================================================
+   SAVE PRODUCTS + SETTINGS
+====================================================== */
+
+window.firebaseSaveConfig =
+  async function(data){
+
+    await setDoc(
+      configDoc,
+      {
+        products:
+          data.products,
+        settings:
+          data.settings
+      },
+      {
+        merge:true
+      }
+    );
+  };
+
+
+/* ======================================================
+   MIGRATE OLD bagel/shared DATA
+====================================================== */
+
+async function migrateLegacyData(){
+
+  const currentOrders =
+    await getDocs(
+      ordersCollection
+    );
+
+  const configSnapshot =
+    await getDoc(
+      configDoc
+    );
+
+  /*
+    orders collection 已經有資料
+    就不再搬舊資料
+  */
+  if(!currentOrders.empty){
+    return;
+  }
+
+  const legacySnapshot =
+    await getDoc(
+      legacySharedDoc
+    );
+
+  if(
+    !legacySnapshot.exists()
+  ){
+    return;
+  }
+
+  const legacy =
+    legacySnapshot.data();
+
+  /*
+    搬舊訂單
+  */
+  if(
+    Array.isArray(
+      legacy.orders
+    )
+    &&
+    legacy.orders.length > 0
+  ){
+
+    let biggestNumber = 0;
+
+    for(
+      const oldOrder
+      of legacy.orders
+    ){
+
+      const id =
+        oldOrder.id
+        ||
+        (
+          "o-" +
+          crypto.randomUUID()
+        );
+
+      const number =
+        parseInt(
+          oldOrder.orderNumber
+        );
+
+      if(
+        !Number.isNaN(number)
+      ){
+        biggestNumber =
+          Math.max(
+            biggestNumber,
+            number
+          );
+      }
+
+      await setDoc(
+        doc(
+          db,
+          "orders",
+          id
+        ),
+        {
+          ...oldOrder,
+          id
+        }
+      );
+    }
+
+    if(biggestNumber > 0){
+
+      await setDoc(
+        counterDoc,
+        {
+          value:
+            biggestNumber
+        },
+        {
+          merge:true
+        }
+      );
+    }
+  }
+
+  /*
+    搬舊商品與網站設定
+  */
+  if(
+    !configSnapshot.exists()
+  ){
+
+    const configData = {};
+
+    if(
+      Array.isArray(
+        legacy.products
+      )
+    ){
+      configData.products =
+        legacy.products;
+    }
+
+    if(
+      legacy.settings
+    ){
+      configData.settings =
+        legacy.settings;
+    }
+
+    if(
+      Object.keys(
+        configData
+      ).length > 0
+    ){
+      await setDoc(
+        configDoc,
+        configData
+      );
+    }
+  }
+}
+
+
+/* ======================================================
+   INITIAL CONFIG
+====================================================== */
+
+async function ensureConfig(){
+
+  const snapshot =
+    await getDoc(
+      configDoc
+    );
+
+  if(snapshot.exists()){
+    return;
+  }
+
+  await setDoc(
+    configDoc,
+    {
+      products:
+        window.products,
+      settings:
+        window.settings
+    }
+  );
+}
+
+
+/* ======================================================
+   REALTIME CONFIG
+====================================================== */
+
+function listenConfig(){
+
+  onSnapshot(
+    configDoc,
+    snapshot => {
+
+      if(
+        !snapshot.exists()
+      ){
+        return;
+      }
+
+      const data =
+        snapshot.data();
+
+      if(
+        Array.isArray(
+          data.products
+        )
+      ){
+        window.products =
+          data.products;
+      }
+
+      if(
+        data.settings
+      ){
+        window.settings =
+          data.settings;
+      }
+
+      window.applySettings();
+      window.refreshEverything();
+
+      const adminContent =
+        document.getElementById(
+          "adminContent"
+        );
+
+      if(
+        adminContent
+        &&
+        adminContent.style.display
+        === "block"
+      ){
+        window.refreshAdmin();
+      }
+    },
+    error => {
+
+      console.error(
+        "網站設定同步失敗：",
+        error
+      );
+    }
+  );
+}
+
+
+/* ======================================================
+   REALTIME ORDERS
+====================================================== */
+
+function listenOrders(){
+
+  onSnapshot(
+    ordersCollection,
+    snapshot => {
+
+      const newOrders =
+        snapshot.docs
+        .map(
+          d=>({
+            ...d.data(),
+            id:
+              d.data().id
+              ||
+              d.id
+          })
+        )
+        .sort(
+          (a,b)=>
+            new Date(
+              a.createdAt || 0
+            )
+            -
+            new Date(
+              b.createdAt || 0
+            )
+        );
+
+      window.orders =
+        newOrders;
+
+      window.refreshEverything();
+
+      const lookupResult =
+        document.getElementById(
+          "lookupResult"
+        );
+
+      /*
+        查詢結果如果正在顯示，
+        不強制清除。
+      */
+
+      const adminContent =
+        document.getElementById(
+          "adminContent"
+        );
+
+      if(
+        adminContent
+        &&
+        adminContent.style.display
+        === "block"
+      ){
+        window.refreshAdmin();
+      }
+    },
+    error => {
+
+      console.error(
+        "訂單同步失敗：",
+        error
+      );
+
+      alert(
+        "無法連線到訂單資料庫，請重新整理頁面。"
+      );
+    }
+  );
+}
+
+
+/* ======================================================
+   START FIREBASE
+====================================================== */
+
+async function startFirebase(){
+
+  try{
+
+    /*
+      先搬你目前舊版 bagel/shared
+      裡可能已經存在的資料
+    */
+    await migrateLegacyData();
+
+    /*
+      沒有設定資料時建立預設設定
+    */
+    await ensureConfig();
+
+    /*
+      開始即時監聽
+    */
+    listenConfig();
+    listenOrders();
+
+    console.log(
+      "Firebase 多人即時同步已啟用"
+    );
+
+  }catch(error){
+
+    console.error(
+      "Firebase 初始化失敗：",
+      error
+    );
+
+    alert(
+      "Firebase 連線失敗，請確認 Firestore 已建立並檢查 Rules。"
+    );
+  }
+}
+
+startFirebase();
+
+</script></body>
 </html>
